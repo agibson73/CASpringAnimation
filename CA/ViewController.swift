@@ -284,7 +284,7 @@ class ViewController: UIViewController {
         
         if adjustedSender <= self.testView.frame.width/2{
             print(sender.value)
-            testView.layer.removeAnimationForKey("cornerRadius")
+            testView.layer.removeAnimationForKey("cR")
             CATransaction.begin()
             let basicSpring = CABasicAnimation(keyPath:"cornerRadius")
             basicSpring.fromValue = testView.layer.cornerRadius
