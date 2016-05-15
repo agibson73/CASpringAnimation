@@ -72,11 +72,9 @@ class ViewController: UIViewController {
             let scale = CASpringAnimation(keyPath: "transform.scale")
             scale.toValue = NSValue(CGPoint: CGPointMake(2, 2))
             scale.duration = 0.8
-            //.17,.67,.94,1.54
             scale.timingFunction = CAMediaTimingFunction(controlPoints: 0.17, 0.67, 0.94, 1.54)
-            scale.fillMode = kCAFillModeForwards
-            scale.removedOnCompletion = false
             self.testView.layer.addAnimation(scale, forKey: "scale")
+            self.testView.layer.transform = CATransform3DMakeScale(2, 2, 0)
             isLarge = true
         }else {
             
@@ -85,10 +83,9 @@ class ViewController: UIViewController {
             scale.toValue = NSValue(CGPoint: CGPointMake(1, 1))
             scale.fromValue = NSValue(CGPoint: CGPointMake(2, 2))
             scale.duration = 0.8
-            
-            //.17,.67,.94,1.54
             scale.timingFunction = CAMediaTimingFunction(controlPoints: 0.37, 0.67, 0.94, 1.34)
             self.testView.layer.addAnimation(scale, forKey: "scale")
+            self.testView.layer.transform = CATransform3DIdentity
             isLarge = false
         }
         
@@ -237,7 +234,7 @@ class ViewController: UIViewController {
         scale.removedOnCompletion = false
         self.caAnimView.layer.addAnimation(scale, forKey: "scale")
         
-        CATransaction.begin()
+
         let anotherScale = CASpringAnimation(keyPath: "transform.scale")
         anotherScale.toValue = NSValue(CGPoint: CGPointMake(1.0, 1.0))
         anotherScale.fromValue = NSValue(CGPoint: CGPointMake(1.5, 1.5))
@@ -291,7 +288,8 @@ class ViewController: UIViewController {
             basicSpring.toValue = adjustedSender
             basicSpring.duration = 0.01
             CATransaction.setCompletionBlock {
-                    self.testView.layer.cornerRadius = CGFloat(adjustedSender)
+                self.testView.layer.cornerRadius = CGFloat(adjustedSender)
+                self.testView.layer.removeAllAnimations()
             }
             self.testView.layer.addAnimation(basicSpring, forKey: "cR")
             CATransaction.commit()
@@ -308,8 +306,12 @@ class ViewController: UIViewController {
 }
 
 extension UIViewController{
-    func presetOpacity(view:UIView){
-        view.layer.opacity = 0
+    func presetOpacity(targetView:UIView){
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        targetView.layer.opacity = 0
+        CATransaction.commit()
+       
     }
     
     func scaleView(targetView:UIView,fromX:CGFloat,fromY:CGFloat,toX:CGFloat,toY:CGFloat,strength:CGFloat,keyPath:String,duration:Double,delay:Double,withReveal:Bool){
@@ -326,27 +328,18 @@ extension UIViewController{
         scale.damping = strength
         scale.beginTime = CACurrentMediaTime() + delay
         scale.timingFunction = CAMediaTimingFunction(controlPoints: 0.17, 0.67, 0.94, 1.54)
-        //CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
-        //CAMediaTimingFunction(controlPoints: 0.17, 0.67, 0.94, 1.54)
         if group != nil{
             scale.beginTime = delay
             
             let opacity = self.revealOpacityAnimation(1, duration: duration * 0.05, delay: 0)
             opacity.beginTime = delay
-            opacity.removedOnCompletion = false
-            opacity.fillMode = kCAFillModeForwards
+            
+            opacity.fromValue = 0
             group?.animations = [scale,opacity]
             group?.duration = duration + delay
-            group?.removedOnCompletion = false
-            group?.fillMode = kCAFillModeForwards
-            CATransaction.begin()
-            CATransaction.setCompletionBlock({
-                targetView.layer.opacity = 1
-                targetView.layer.removeAllAnimations()
-                
-            })
+            group?.beginTime = CACurrentMediaTime()
             targetView.layer.addAnimation(group!, forKey: "group")
-            CATransaction.commit()
+            targetView.layer.opacity = 1
         }else{
             scale.beginTime = CACurrentMediaTime() + delay
             targetView.layer.addAnimation(scale, forKey: "transform.scale")
@@ -355,12 +348,13 @@ extension UIViewController{
     }
     
     func revealOpacityAnimation(desiredOpacity:Double,duration:Double,delay:Double)->CABasicAnimation{
+        
         let opacity = CABasicAnimation(keyPath: "opacity")
         opacity.toValue = desiredOpacity
         opacity.fromValue = 0
         opacity.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseIn)
-        // opacity.beginTime = CACurrentMediaTime() + delay
         opacity.duration = duration
+        opacity.fillMode = kCAFillModeBackwards
         return opacity
     }
 }
