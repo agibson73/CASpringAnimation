@@ -180,18 +180,18 @@ class ViewController: UIViewController {
         // create a group for spin,corner radius and position
         let firstGroup = CAAnimationGroup()
         
-        CATransaction.begin()
+
         let spring = CASpringAnimation(keyPath: "position")
         spring.toValue = NSValue(CGPoint: self.view.center)
         spring.fromValue = NSValue(CGPoint: originalCenter)
         spring.initialVelocity = 10
         spring.damping = 15.0
         spring.beginTime = 0.5
-        CATransaction.setCompletionBlock({
-            self.caAnimView.center = self.view.center
-        })
+        spring.fillMode = kCAFillModeBackwards
         spring.duration = 0.7
         spring.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
+       
+
         
         
         
@@ -221,7 +221,7 @@ class ViewController: UIViewController {
         firstGroup.animations = [spring,rotation,cornerRadius,unwindCorner]
         firstGroup.duration = 1.2
         self.caAnimView.layer.addAnimation(firstGroup, forKey: nil)
-        CATransaction.commit()
+        self.caAnimView.layer.position = self.view.center
         
         
         
@@ -230,9 +230,15 @@ class ViewController: UIViewController {
         scale.toValue = NSValue(CGPoint: CGPointMake(1.5, 1.5))
         scale.duration = 0.5
         scale.beginTime = CACurrentMediaTime() + 1.4
-        scale.fillMode = kCAFillModeForwards
-        scale.removedOnCompletion = false
+        CATransaction.begin()
+        CATransaction.setCompletionBlock({
+            self.caAnimView.layer.transform = CATransform3DMakeScale(1.5, 1.5, 0)
+        })
         self.caAnimView.layer.addAnimation(scale, forKey: "scale")
+        CATransaction.commit()
+        
+        
+
         
 
         let anotherScale = CASpringAnimation(keyPath: "transform.scale")
@@ -241,10 +247,14 @@ class ViewController: UIViewController {
         anotherScale.duration = 0.5
         anotherScale.beginTime = CACurrentMediaTime() + 2.6
         anotherScale.fillMode = kCAFillModeForwards
-        anotherScale.removedOnCompletion = false
-        anotherScale.fillMode = kCAFillModeForwards
-        anotherScale.removedOnCompletion = false
+        CATransaction.begin()
+        CATransaction.setCompletionBlock({
+            self.caAnimView.layer.transform = CATransform3DIdentity
+        })
         self.caAnimView.layer.addAnimation(anotherScale, forKey: nil)
+        CATransaction.commit()
+        
+
         
         
         CATransaction.begin()
@@ -254,12 +264,10 @@ class ViewController: UIViewController {
         lastSpring.beginTime = CACurrentMediaTime() + 3.4
         lastSpring.initialVelocity = 10
         lastSpring.damping = 15.0
-        lastSpring.removedOnCompletion = false
-        lastSpring.fillMode = kCAFillModeForwards
         lastSpring.duration = 5
         lastSpring.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
         CATransaction.setCompletionBlock({
-            self.caAnimView.center = originalCenter
+            self.caAnimView.layer.position = originalCenter
             self.caAnimView.layer.removeAllAnimations()
             self.view.userInteractionEnabled = true
         })
